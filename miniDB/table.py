@@ -235,7 +235,7 @@ class Table:
         if condition is not None:
             column_name, operator, value = self._parse_condition(condition)
             column = self.column_by_name(column_name)
-            rows = [ind for ind, x in enumerate(column) if get_op(operator, x, value)]
+            rows = [ind for ind, x in enumerate(column) if not get_op(operator, x, value)]
         else:
             rows = [i for i in range(len(self.data))]
 
