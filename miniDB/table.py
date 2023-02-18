@@ -156,7 +156,7 @@ class Table:
                 Operatores supported: (<,<=,=,>=,>)
         '''
         # parse the condition
-        column_name, operator, value = self._parse_condition(condition)
+        column_name, operator, value,isnot = self._parse_condition(condition)
 
         # get the condition and the set column
         column = self.column_by_name(column_name)
@@ -187,7 +187,7 @@ class Table:
                 
                 Operatores supported: (<,<=,==,>=,>)
         '''
-        column_name, operator, value = self._parse_condition(condition)
+        column_name, operator, value,isnot = self._parse_condition(condition)
 
         indexes_to_del = []
 
@@ -212,7 +212,7 @@ class Table:
         return indexes_to_del
 
 
-        # def _select_where(self, return_columns, condition=None, distinct=False, order_by=None, desc=True, limit=None):
+    def _select_where(self, return_columns, condition=None, distinct=False, order_by=None, desc=True, limit=None):
         '''
         Select and return a table containing specified columns and rows where condition is met.
 
@@ -238,9 +238,14 @@ class Table:
         # if condition is None, return all rows
         # if not, return the rows with values where condition is met for value
         if condition is not None:
-            column_name, operator, value = self._parse_condition(condition)
+            column_name, operator, value,isnot = self._parse_condition(condition)
+
             column = self.column_by_name(column_name)
-            rows = [ind for ind, x in enumerate(column) if not get_op(operator, x, value)]
+            if isnot == True:
+              rows = [ind for ind, x in enumerate(column) if not get_op(operator, x, value)]
+            else:
+              rows = [ind for ind, x in enumerate(column) if  get_op(operator, x, value)]
+
         else:
             rows = [i for i in range(len(self.data))]
 
@@ -284,7 +289,7 @@ class Table:
             return_cols = [self.column_names.index(colname) for colname in return_columns]
 
 
-        column_name, operator, value = self._parse_condition(condition)
+        column_name, operator, value,isnot = self._parse_condition(condition)
 
         # if the column in condition is not a primary key, abort the select
         if column_name != self.column_names[self.pk_idx]:
@@ -356,7 +361,7 @@ class Table:
                 Operators supported: (<,<=,==,>=,>)
         '''
         # get columns and operator
-        column_name_left, operator, column_name_right = self._parse_condition(condition, join=True)
+        column_name_left, operator, column_name_right,isnot = self._parse_condition(condition, join=True)
         # try to find both columns, if you fail raise error
 
         if(operator != '=' and join_type in ['left','right','full']):
@@ -560,14 +565,23 @@ class Table:
         # if both_columns (used by the join function) return the names of the names of the columns (left first)
         if join:
             return split_condition(condition)
+        print("the condition is")
+        print(condition)
 
         # cast the value with the specified column's type and return the column name, the operator and the casted value
         left, op, right = split_condition(condition)
+        print(left)
+        apotelesma = left.split(" ")
+        isnot = False
+        print(apotelesma)
+        if len(apotelesma)>1 and apotelesma[0]=="not" :
+            left=apotelesma[1] 
+            isnot = True
         if left not in self.column_names:
             raise ValueError(f'Condition is not valid (cant find column name)')
         coltype = self.column_types[self.column_names.index(left)]
 
-        return left, op, coltype(right)
+        return left, op, coltype(right),isnot
 
 
     def _load_from_file(self, filename):

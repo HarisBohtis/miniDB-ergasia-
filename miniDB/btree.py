@@ -370,11 +370,11 @@ class Table:
         for column in self.columns:
             if column.is_primary_key:
                 if self.primary_key_index is None:
-                   self.primary_key_index = BTree(column)
+                   self.primary_key_index = Btree(column)
                    self.primary_key_index.insert(row)
             elif column.is_unique:
                 if column.name not in self.unique_indexes:
-                    self.unique_indexes[column.name] = BTree(column)
+                    self.unique_indexes[column.name] = Btree(column)
                     self.unique_indexes[column.name].insert(row)
                     self.rows.append(row)
 
