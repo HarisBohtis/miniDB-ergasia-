@@ -156,7 +156,7 @@ class Table:
                 Operatores supported: (<,<=,=,>=,>)
         '''
         # parse the condition
-        column_name, operator, value,isnot = self._parse_condition(condition)
+        column_name, operator, value,isnot= self._parse_condition(condition)
 
         # get the condition and the set column
         column = self.column_by_name(column_name)
@@ -187,7 +187,7 @@ class Table:
                 
                 Operatores supported: (<,<=,==,>=,>)
         '''
-        column_name, operator, value,isnot = self._parse_condition(condition)
+        column_name, operator, value,isnot= self._parse_condition(condition)
 
         indexes_to_del = []
 
@@ -239,15 +239,29 @@ class Table:
         # if not, return the rows with values where condition is met for value
         if condition is not None:
             column_name, operator, value,isnot = self._parse_condition(condition)
+            if 'AND' in condition:
+                left_condition, right_condition = condition.split('AND')
+                left_value = self._parse_condition(left_condition.strip())
+                right_value = self._parse_condition(right_condition.strip())
+                rows = [ind for ind in range(len(self.data)) if get_op('AND', self._parse_condition(left_condition.strip()), self._parse_condition(right_condition.strip()))]
+            elif 'OR' in condition:
+              left_condition, right_condition = condition.split('OR')
+              left_value = self._parse_condition(left_condition.strip())
+              right_value = self._parse_condition(right_condition.strip())
+              rows = [ind for ind in range(len(self.data)) if get_op('OR', self._parse_condition(left_condition.strip()), self._parse_condition(right_condition.strip()))]
+            else:
+              column_name, operator, value,isnot = self._parse_condition(condition)
 
-            column = self.column_by_name(column_name)
+              column = self.column_by_name(column_name)
             if isnot == True:
               rows = [ind for ind, x in enumerate(column) if not get_op(operator, x, value)]
             else:
               rows = [ind for ind, x in enumerate(column) if  get_op(operator, x, value)]
-
+              print("value is")
+              print(value)
+              print(operator)
         else:
-            rows = [i for i in range(len(self.data))]
+         rows = [i for i in range(len(self.data))]
 
         # copy the old dict, but only the rows and columns of data with index in rows/columns (the indexes that we want returned)
         dict = {(key):([[self.data[i][j] for j in return_cols] for i in rows] if key=="data" else value) for key,value in self.__dict__.items()}
@@ -569,19 +583,28 @@ class Table:
         print(condition)
 
         # cast the value with the specified column's type and return the column name, the operator and the casted value
-        left, op, right = split_condition(condition)
-        print(left)
-        apotelesma = left.split(" ")
-        isnot = False
-        print(apotelesma)
-        if len(apotelesma)>1 and apotelesma[0]=="not" :
-            left=apotelesma[1] 
+        
+        if 'AND' in condition:
+          left_condition, right_condition = condition.split('AND')
+          left_value = self._parse_condition(left_condition.strip())
+          right_value = self._parse_condition(right_condition.strip())
+          return 'AND', left_value, right_value
+        elif 'OR' in condition:
+          left_condition, right_condition = condition.split('OR')
+          left_value = self._parse_condition(left_condition.strip())
+          right_value = self._parse_condition(right_condition.strip())
+          return 'OR', left_value, right_value
+        else:
+          left, op, right = split_condition(condition)
+          result1 = left.split(" ")
+          isnot = False
+        if len(result1) > 1 and result1[0] == "not":
+            left = result1[1] 
             isnot = True
         if left not in self.column_names:
             raise ValueError(f'Condition is not valid (cant find column name)')
         coltype = self.column_types[self.column_names.index(left)]
-
-        return left, op, coltype(right),isnot
+        return left, op, coltype(right), isnot
 
 
     def _load_from_file(self, filename):
