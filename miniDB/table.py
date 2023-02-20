@@ -237,6 +237,9 @@ class Table:
         
         # if condition is None, return all rows
         # if not, return the rows with values where condition is met for value
+        '''
+        we have split what used to be y into column_name1 and column_name2. Using operator and condition.split we are able to decide if we want to run code for AND or OR
+        '''
         if condition is not None:
             column_name1,column_name2, operator, value,isnot = self._parse_condition(condition)
             column1, column2 = self.column_by_name(column_name1),self.column_by_name(column_name2)
@@ -247,9 +250,10 @@ class Table:
                 left_value,right_value= left_value[:-1],right_value[:-1]
                 operator1, operator2 = left_value[-2], right_value[-2]
                 w,u = left_value[-1],right_value[-1]
-                rows =  [ind for ind, (x,y) in enumerate(zip(column1,column2)) if get_op(operator1,x,w) and get_op(operator2,y,u)]
-                print("these are the correct Indexes for the rows",rows)
-
+                rows =  [ind for ind, (x,y) in enumerate(zip(column1,column2)) if get_op(operator1,x,w) and get_op(operator2,y,u)] #compares x and y and if both are True then it gets assigned to rows
+                print("these are the correct Indexes for the rows",rows)#prints the indexes for the correct answers
+            #both AND and OR use left_value and right_value which is a list that contains each condition, left condition being the first one and right being the second.
+            #both AND and OR work in the same ways
             elif isnot == True and len(condition.split('or'))>1:
                 left_condition, right_condition = condition.split('or')
                 left_value,right_value  = self._parse_condition(left_condition.strip()),self._parse_condition(right_condition.strip())
@@ -258,7 +262,7 @@ class Table:
                 w,u = left_value[-1],right_value[-1]
                 rows1 = [ind for ind, x in enumerate(column1) if get_op(operator1, x, w)]
                 rows2 = [ind for ind, y in enumerate(column2) if get_op(operator2, y, u)]
-                rows = list(set(rows1) | set(rows2))  
+                rows = list(set(rows1) | set(rows2))  #compares rows1 and rows2 and prints either one if it is correct
                 print("these are the correct Indexes for the rows",rows)
             
             else:
@@ -593,12 +597,19 @@ class Table:
         index2 = False 
         index = []
         condition_list = condition.split()
+        '''
+        we look for 'and' within the condition_list, if we find it we change index1 to True as well as find the index for where 'and' is in the condition_list() list
+        something similar happens with the elif line but instead of index1 it uses index2 and checks for 'or' within the condition_list() list
+        '''
         if "and" in condition_list :
             index = condition_list.index('and')
             index1 = True
         elif "or" in condition_list:
             index = condition_list.index('or')
             index2 = True
+        '''
+        here we check if there is 'and', 'or' statement in condition_list() if not then we move on to 'not' or no statement
+        '''
         if index1 == True:#THIS IS AND
             left_condition = " ".join(condition_list[:index])
             right_condition = " ".join(condition_list[index+1:])
@@ -614,8 +625,8 @@ class Table:
             isnot = True
             return y,w, op, coltype(x), isnot 
         elif index2 == True:# THIS IS OR
-            left_condition = "  ".join(condition_list[:index])
-            right_condition = "  ".join(condition_list[index+1:])
+            left_condition = " ".join(condition_list[:index])
+            right_condition = " ".join(condition_list[index+1:])
             left_value = self._parse_condition(left_condition)
             right_value = self._parse_condition(right_condition)
             left_value= left_value[:-1]
