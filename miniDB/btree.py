@@ -242,7 +242,7 @@ class Btree:
             self.nodes[ptr].show()
             print('----')
 
-
+#test
     def plot(self):
         ## arrange the nodes top to bottom left to right
         nds = []
